@@ -7,9 +7,9 @@ product is a web application backed by a TypeScript REST API. The backend is a
 **modular monolith**: one NestJS application and deployment, organized into
 well-defined business modules rather than independently deployed services.
 
-PostgreSQL is the relational datastore, accessed through Prisma. Future
-infrastructure such as Redis, BullMQ, object storage, and search will be
-introduced only when a product or operational requirement calls for it.
+Neon Cloud PostgreSQL is the relational datastore, accessed through Prisma.
+Future infrastructure such as Redis, BullMQ, object storage, and search will
+be introduced only when a product or operational requirement calls for it.
 
 ## Approved technology stack
 
@@ -21,7 +21,7 @@ introduced only when a product or operational requirement calls for it.
   Cloudflare R2 for object storage, Meilisearch for search, and GitHub Actions
   for CI/CD.
 - **Hosting:** Vercel for the web application, Render for the NestJS API, and
-  managed PostgreSQL.
+  Neon Cloud PostgreSQL.
 
 These are approved technologies, not a requirement to install or provision
 them all in the repository foundation. Add dependencies and infrastructure as

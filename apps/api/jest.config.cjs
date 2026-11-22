@@ -3,6 +3,7 @@ module.exports = {
   rootDir: ".",
   testEnvironment: "node",
   testMatch: ["<rootDir>/test/**/*.e2e-spec.ts"],
+  setupFiles: ["dotenv/config"],
   extensionsToTreatAsEsm: [".ts"],
   transform: {
     "^.+\\.ts$": [

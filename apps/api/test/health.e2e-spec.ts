@@ -1,14 +1,14 @@
 import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import request from "supertest";
-import { AppModule } from "../src/app.module.js";
+import { HealthModule } from "../src/health/health.module.js";
 
 describe("Health endpoint", () => {
   let app: INestApplication;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [HealthModule],
     }).compile();
 
     app = moduleRef.createNestApplication();

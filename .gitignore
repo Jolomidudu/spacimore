@@ -12,6 +12,7 @@ coverage/
 *.key
 *.p12
 *.pfx
+apps/api/src/generated/prisma/
 .turbo/
 .DS_Store
 *.log
