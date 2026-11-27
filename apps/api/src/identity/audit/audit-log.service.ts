@@ -42,6 +42,22 @@ const SAFE_METADATA_VALUES = {
     "SUPER_ADMIN",
   ],
   challengePurpose: ["EMAIL_VERIFICATION", "PASSWORD_RESET"],
+  failureCode: [
+    "ACCOUNT_NOT_PENDING",
+    "CHALLENGE_CONSUMED",
+    "CHALLENGE_EXPIRED",
+    "CHALLENGE_NOT_FOUND",
+    "CHALLENGE_SUPERSEDED",
+    "DECRYPTION_FAILED",
+    "DELIVERY_INTERNAL_ERROR",
+    "DELIVERY_UNCERTAIN",
+    "PROVIDER_AUTHENTICATION",
+    "PROVIDER_CONFIGURATION",
+    "PROVIDER_REJECTED",
+    "PROVIDER_TRANSIENT",
+    "RETRIES_EXHAUSTED",
+    "WRONG_CHALLENGE_PURPOSE",
+  ],
 } as const;
 
 type AuditMetadataInput = Readonly<Record<string, unknown>>;
@@ -101,6 +117,17 @@ export function sanitizeAuditMetadata(
       continue;
     }
 
+    if (key === "claimCount" || key === "abandonedClaimCount") {
+      if (
+        typeof value === "number" &&
+        Number.isSafeInteger(value) &&
+        value >= 0
+      ) {
+        sanitized[key] = value;
+      }
+      continue;
+    }
+
     if (
       key === "reasonCode" &&
       typeof value === "string" &&
@@ -132,6 +159,15 @@ export function sanitizeAuditMetadata(
       key === "challengePurpose" &&
       typeof value === "string" &&
       isAllowedValue(value, SAFE_METADATA_VALUES.challengePurpose)
+    ) {
+      sanitized[key] = value;
+      continue;
+    }
+
+    if (
+      key === "failureCode" &&
+      typeof value === "string" &&
+      isAllowedValue(value, SAFE_METADATA_VALUES.failureCode)
     ) {
       sanitized[key] = value;
     }

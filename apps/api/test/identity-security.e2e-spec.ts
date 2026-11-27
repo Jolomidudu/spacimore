@@ -61,22 +61,59 @@ describe("Identity security primitives", () => {
       securityPrimitives.digestOpaqueToken("x".repeat(4097)),
     ).toThrow("Opaque token must be a non-empty bounded string.");
   });
+
+  it("encrypts outbox tokens and rejects tampering", () => {
+    const token = securityPrimitives.generateOpaqueToken();
+    const key = Buffer.alloc(32, 7);
+    const encrypted = securityPrimitives.encryptOpaqueToken(token, key);
+
+    expect(encrypted.ciphertext).not.toContain(token);
+    expect(securityPrimitives.decryptOpaqueToken(encrypted, key)).toBe(token);
+    expect(() =>
+      securityPrimitives.decryptOpaqueToken(
+        { ...encrypted, authTag: Buffer.alloc(16).toString("base64url") },
+        key,
+      ),
+    ).toThrow();
+  });
 });
 
 describe("Identity security configuration", () => {
+  const encryptionKey = Buffer.alloc(32).toString("base64");
+
   it("defaults to no trusted origins", () => {
-    expect(validateIdentitySecurityConfig({})).toEqual({ trustedOrigins: [] });
+    expect(
+      validateIdentitySecurityConfig({
+        EMAIL_OUTBOX_ENCRYPTION_KEY: encryptionKey,
+      }),
+    ).toEqual({
+      trustedOrigins: [],
+      outboxEncryptionKey: Buffer.alloc(32),
+    });
   });
 
   it("accepts HTTPS origins and local HTTP development origins", () => {
     expect(
       validateIdentitySecurityConfig({
+        EMAIL_OUTBOX_ENCRYPTION_KEY: encryptionKey,
         AUTH_TRUSTED_ORIGINS: "https://shop.example, http://localhost:3000",
       }),
     ).toEqual({
       trustedOrigins: ["https://shop.example", "http://localhost:3000"],
+      outboxEncryptionKey: Buffer.alloc(32),
     });
   });
+
+  it.each(["", "not-base64", Buffer.alloc(16).toString("base64")])(
+    "rejects an invalid outbox encryption key",
+    (value) => {
+      expect(() =>
+        validateIdentitySecurityConfig({
+          EMAIL_OUTBOX_ENCRYPTION_KEY: value,
+        }),
+      ).toThrow("EMAIL_OUTBOX_ENCRYPTION_KEY");
+    },
+  );
 
   it.each([
     "https://shop.example/path",
@@ -88,7 +125,10 @@ describe("Identity security configuration", () => {
   ])("rejects an unsafe or malformed origin list without echoing it", (value) => {
     let errorMessage = "";
     try {
-      validateIdentitySecurityConfig({ AUTH_TRUSTED_ORIGINS: value });
+      validateIdentitySecurityConfig({
+        EMAIL_OUTBOX_ENCRYPTION_KEY: encryptionKey,
+        AUTH_TRUSTED_ORIGINS: value,
+      });
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : "";
     }

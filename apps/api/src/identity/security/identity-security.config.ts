@@ -2,15 +2,33 @@ import { registerAs } from "@nestjs/config";
 
 export interface IdentitySecurityConfig {
   trustedOrigins: readonly string[];
+  outboxEncryptionKey: Buffer;
 }
 
 export function validateIdentitySecurityConfig(
   environment: NodeJS.ProcessEnv,
 ): IdentitySecurityConfig {
+  const encryptionKey = environment.EMAIL_OUTBOX_ENCRYPTION_KEY;
+
+  if (!encryptionKey) {
+    throw new Error("EMAIL_OUTBOX_ENCRYPTION_KEY must be configured.");
+  }
+
+  const outboxEncryptionKey = Buffer.from(encryptionKey, "base64");
+
+  if (
+    outboxEncryptionKey.length !== 32 ||
+    outboxEncryptionKey.toString("base64") !== encryptionKey
+  ) {
+    throw new Error(
+      "EMAIL_OUTBOX_ENCRYPTION_KEY must be a base64-encoded 32-byte key.",
+    );
+  }
+
   const configuredOrigins = environment.AUTH_TRUSTED_ORIGINS;
 
   if (configuredOrigins === undefined || configuredOrigins.trim() === "") {
-    return { trustedOrigins: [] };
+    return { trustedOrigins: [], outboxEncryptionKey };
   }
 
   const origins = configuredOrigins.split(",").map((value) => value.trim());
@@ -55,7 +73,7 @@ export function validateIdentitySecurityConfig(
     throw new Error("AUTH_TRUSTED_ORIGINS must not contain duplicates.");
   }
 
-  return { trustedOrigins: normalizedOrigins };
+  return { trustedOrigins: normalizedOrigins, outboxEncryptionKey };
 }
 
 export const identitySecurityConfig = registerAs(
